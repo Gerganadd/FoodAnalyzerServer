@@ -6,15 +6,14 @@ import bg.sofia.uni.fmi.mjt.foods.Food;
 import java.util.List;
 
 public class GetFoodByBarcodeCommand extends Command {
+    private String barcode;
+    private String imagePath;
     public GetFoodByBarcodeCommand(List<String> attributes) {
         super(attributes);
 
         parseCode(attributes);
         parseImage(attributes);
     }
-
-    private String barcode;
-    private String imagePath;
 
     //to-do write documentation
     @Override
