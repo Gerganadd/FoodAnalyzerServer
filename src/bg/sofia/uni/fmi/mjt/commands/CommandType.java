@@ -5,6 +5,12 @@ public enum CommandType {
     GET_FOOD_REPORT("get-food-report"),
     GET_FOOD_BY_BARCODE("get-food-by-barcode");
 
+    private final String text;
+
+    CommandType(String text) {
+        this.text = text;
+    }
+
     public static CommandType getValueOf(String text) {
         if (GET_FOOD.getText().equals(text)) {
             return GET_FOOD;
@@ -18,10 +24,7 @@ public enum CommandType {
 
         throw new IllegalArgumentException();
     }
-    CommandType(String text) {
-        this.text = text;
-    }
-    private final String text;
+
     public String getText() {
         return text;
     }
