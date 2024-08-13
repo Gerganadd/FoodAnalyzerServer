@@ -1,46 +1,48 @@
 package bg.sofia.uni.fmi.mjt.commands;
 
-import bg.sofia.uni.fmi.mjt.exceptions.UnknownCommand;
+import bg.sofia.uni.fmi.mjt.exceptions.UnknownCommandException;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 public class CommandFactoryTest {
 
     @Test
-    void testCreateWithNull() throws UnknownCommand {
-        assertThrows(UnknownCommand.class, () -> CommandFactory.create(null),
-                "Expect to throw UnknownCommand exception but it wasn't");
+    void testCreateWithNull() {
+        assertThrows(UnknownCommandException.class, () -> CommandFactory.create(null),
+                "Expected UnknownCommandException but wasn't thrown");
     }
 
     @Test
-    void testCreateWithEmptyText() throws UnknownCommand {
-        assertThrows(UnknownCommand.class, () -> CommandFactory.create(""),
-                "Expect to throw UnknownCommand exception but it wasn't");
+    void testCreateWithEmptyText() {
+        assertThrows(UnknownCommandException.class, () -> CommandFactory.create(""),
+                "Expected UnknownCommandException but wasn't thrown");
 
-        assertThrows(UnknownCommand.class, () -> CommandFactory.create("  "),
-                "Expect to throw UnknownCommand exception but it wasn't");
+        assertThrows(UnknownCommandException.class, () -> CommandFactory.create("  "),
+                "Expected UnknownCommandException but wasn't thrown");
     }
 
     @Test
-    void testCreateWithInvalidCommandName() throws UnknownCommand {
-        assertThrows(UnknownCommand.class,
+    void testCreateWithInvalidCommandName() {
+        assertThrows(UnknownCommandException.class,
                 () -> CommandFactory.create("get-foods pasta"), // the correct is: get-food
-                "Expect to throw UnknownCommand exception but it wasn't");
+                "Expected UnknownCommandException but wasn't thrown");
 
-        assertThrows(UnknownCommand.class,
+        assertThrows(UnknownCommandException.class,
                 () -> CommandFactory.create("get-foods-report 892873"), // the correct is: get-food-report
-                "Expect to throw UnknownCommand exception but it wasn't");
+                "Expected UnknownCommandException but wasn't thrown");
 
-        assertThrows(UnknownCommand.class,
+        assertThrows(UnknownCommandException.class,
                 () -> CommandFactory.create("get-food-barcode --code=8293"), // the correct is: get-food-by-barcode
-                "Expect to throw UnknownCommand exception but it wasn't");
+                "Expected UnknownCommandException but wasn't thrown");
     }
 
     @Test
-    void testCreateWithValidGetFoodCommand() throws UnknownCommand {
+    void testCreateWithValidGetFoodCommand() throws UnknownCommandException {
         Command actual1 = CommandFactory.create("get-food beef noodle soup");
         Command actual2 = CommandFactory.create("get-food tomatoes");
 
@@ -55,7 +57,7 @@ public class CommandFactoryTest {
     }
 
     @Test
-    void testCreateWithValidGetFoodReportCommand() throws UnknownCommand {
+    void testCreateWithValidGetFoodReportCommand() throws UnknownCommandException {
         Command actual1 = CommandFactory.create("get-food-report 415269");
         Command actual2 = CommandFactory.create("get-food-report 732872");
 
@@ -70,7 +72,7 @@ public class CommandFactoryTest {
     }
 
     @Test
-    void testCreateWithValidGetFoodByBarcodeCommand() throws UnknownCommand {
+    void testCreateWithValidGetFoodByBarcodeCommand() throws UnknownCommandException {
         Command actual1 = CommandFactory.create("get-food-by-barcode --img=D:\\Photos\\BarcodeImage.jpg --code=009800146130");
         Command actual2 = CommandFactory.create("get-food-by-barcode --img=D:\\Photos\\BarcodeImage.jpg");
         Command actual3 = CommandFactory.create("get-food-by-barcode --code=009800146130");

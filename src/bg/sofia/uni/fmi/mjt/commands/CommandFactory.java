@@ -1,6 +1,6 @@
 package bg.sofia.uni.fmi.mjt.commands;
 
-import bg.sofia.uni.fmi.mjt.exceptions.UnknownCommand;
+import bg.sofia.uni.fmi.mjt.exceptions.UnknownCommandException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,7 +16,7 @@ public class CommandFactory {
     private static final String GET_FOOD_BY_BARCODE_REGEX =
             CommandType.GET_FOOD_BY_BARCODE.getText() + "( --((img=[\\w:\\\\.]*)|(code=[0-9]+))){1,2}";
 
-    public static Command create(String text) throws UnknownCommand {
+    public static Command create(String text) throws UnknownCommandException {
         validateText(text);
 
         CommandType type = parseType(text);
@@ -29,9 +29,9 @@ public class CommandFactory {
         };
     }
 
-    private static void validateText(String text) throws UnknownCommand {
+    private static void validateText(String text) throws UnknownCommandException {
         if (text == null || text.isBlank()) {
-            throw new UnknownCommand("Command can't be null or blank");
+            throw new UnknownCommandException("Command can't be null or blank");
         }
 
         Pattern patternForGetFood = Pattern.compile(GET_FOOD_REGEX);
@@ -47,17 +47,17 @@ public class CommandFactory {
         boolean r3 = matchGetFoodByBarcode.find();
 
         if (!r1 && !r2 && !r3) {
-            throw new UnknownCommand("Unsupported command : " + text);
+            throw new UnknownCommandException("Unsupported command : " + text);
         }
     }
 
-    private static CommandType parseType(String text) throws UnknownCommand {
+    private static CommandType parseType(String text) throws UnknownCommandException {
         String commandName = text.split(" ")[0].trim();
 
         try {
             return CommandType.getValueOf(commandName);
         } catch (IllegalArgumentException e) {
-            throw new UnknownCommand("Unsupported command name: " + commandName, e);
+            throw new UnknownCommandException("Unsupported command name: " + commandName, e);
         }
     }
 
