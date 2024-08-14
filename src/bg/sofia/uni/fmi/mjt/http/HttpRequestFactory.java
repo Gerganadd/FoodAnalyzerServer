@@ -1,7 +1,11 @@
 package bg.sofia.uni.fmi.mjt.http;
 
+import bg.sofia.uni.fmi.mjt.regexs.Regex;
+
 import java.net.URI;
 import java.net.http.HttpRequest;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class HttpRequestFactory {
     private static final String SITE_URL = "https://api.nal.usda.gov/fdc/";
@@ -9,8 +13,6 @@ public class HttpRequestFactory {
     private static final String API_KEY = String.format("api_key=%s", API_KEY_VALUE);
     private static final String SEARCH_PRODUCT_BY = "v1/foods/search";
     private static final String MATCH_ALL_WORDS = "&requireAllWords=true";
-
-    private static final String REGEX_MATCH_SPACE = " ";
     private static final String HTTP_VERSION_OF_SPACE = "%20";
 
     private HttpRequestFactory() {
@@ -18,15 +20,16 @@ public class HttpRequestFactory {
     }
 
     public static HttpRequest createRequestForFoodByGtinUpcCode(String gtinUpcCode) {
-        //to-do validate gtinUpcCode
+        validateCode(gtinUpcCode, "Gtin upc");
 
         String query = createQueryForSearchByValue(gtinUpcCode);
+        System.out.println(query);
 
         return createHttpRequest(query);
     }
 
     public static HttpRequest createRequestForFoodByFcdId(String fdcId) {
-        //to-do validate fdcId
+        validateCode(fdcId, "fdc id");
 
         String query = createQueryForSearchById(fdcId);
 
@@ -34,7 +37,8 @@ public class HttpRequestFactory {
     }
 
     public static HttpRequest createRequestForFoodsByName(String productName) {
-        //to-do validate product name
+        validateProductName(productName);
+
         productName = formatFoodName(productName);
 
         String query = createQueryForSearchByValue(productName);
@@ -60,7 +64,39 @@ public class HttpRequestFactory {
     }
 
     private static String formatFoodName(String productName) {
-        return productName.replaceAll(REGEX_MATCH_SPACE, HTTP_VERSION_OF_SPACE);
+        return productName.replaceAll(Regex.MATCH_SPACE, HTTP_VERSION_OF_SPACE);
+    }
+
+    private static void validateProductName(String productName) {
+        if (productName == null || productName.isBlank()) {
+            throw new IllegalArgumentException("Product name can't be null or blank");
+        }
+
+        productName = productName.trim();
+
+        Pattern pattern = Pattern.compile(
+                Regex.START_WITH + Regex.MATCH_ONLY_WORDS + Regex.END_WITH);
+        Matcher matcher = pattern.matcher(productName);
+
+        if (!matcher.find()) {
+            throw new IllegalArgumentException("Product name must contains only words separated by space");
+        }
+    }
+
+    private static void validateCode(String code, String codeName) {
+        if (code == null || code.isBlank()) {
+            throw new IllegalArgumentException(codeName + " code can't be null or blank");
+        }
+
+        code = code.trim();
+
+        Pattern pattern = Pattern.compile(
+                Regex.START_WITH + Regex.MATCH_ONLY_DIGITS + Regex.END_WITH);
+        Matcher matcher = pattern.matcher(code);
+
+        if (!matcher.find()) {
+            throw new IllegalArgumentException(codeName + " code must contains only digits");
+        }
     }
 
 }
