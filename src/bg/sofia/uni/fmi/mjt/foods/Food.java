@@ -8,7 +8,7 @@ public record Food(long fdcId, String description, String gtinUpc) implements Se
     private static final int FDC_ID_INDEX = 0;
     private static final int DESCRIPTION_INDEX = 1;
     private static final int GTIN_UPC_INDEX = 1;
-    
+
     public static Food deserialize(String info) {
         String[] args = info.split(SEPARATOR);
 
