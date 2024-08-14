@@ -8,6 +8,7 @@ import bg.sofia.uni.fmi.mjt.http.HttpRespondFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class DatabaseManager {
     private static final String DEFAULT_FOODS_BY_NAME_FILE_NAME = "foodsByName.txt";
@@ -16,12 +17,14 @@ public class DatabaseManager {
 
     private static DatabaseManager manager;
 
-    private Map<String, Foods> foodsByName = new HashMap<>(); // to-do: read it from file
-    private Map<Long, FoodReport> foodReports = new HashMap<>(); // to-do: read it from file
-    private Map<String, Food> foodsByBarcode = new HashMap<>(); // to-do: read it from file
+    private Map<String, Foods> foodsByName = new HashMap<>();
+    private Map<Long, FoodReport> foodReports = new HashMap<>();
+    private Map<String, Food> foodsByBarcode = new HashMap<>();
 
     private DatabaseManager() {
-        //to-do load info from files
+        loadFoodsByName();
+        loadFoodReports();
+        loadFoodsByBarcode();
     }
 
     public static DatabaseManager getInstance() {
@@ -29,6 +32,36 @@ public class DatabaseManager {
             manager = new DatabaseManager();
         }
         return manager;
+    }
+
+    private void loadFoodsByName() {
+        Map<String, Foods> fileInfo = FileManager.loadFrom(DEFAULT_FOODS_BY_NAME_FILE_NAME)
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey, e2 -> Foods.deserialize(e2.getValue())));
+
+        foodsByName.putAll(fileInfo);
+    }
+
+    private void loadFoodsByBarcode() {
+        Map<String, Food> fileInfo = FileManager.loadFrom(DEFAULT_FOODS_BY_BARCODE_FILE_NAME)
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey, e2 -> Food.deserialize(e2.getValue())));
+
+        foodsByBarcode.putAll(fileInfo);
+    }
+
+    private void loadFoodReports() {
+        Map<Long, FoodReport> fileInfo = FileManager.loadFrom(DEFAULT_FOOD_REPORT_FILE_NAME)
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                        e1 -> Long.parseLong(e1.getKey()), e2 -> FoodReport.deserialize(e2.getValue())));
+
+        foodReports.putAll(fileInfo);
     }
 
     public Foods getFoodsByName(String name) {
@@ -66,5 +99,26 @@ public class DatabaseManager {
         foodsByBarcode.put(gtinUpc, result);
 
         return result;
+    }
+
+    public void saveData() {
+        Map<String, String> foodsByNameData = foodsByName
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e2 -> e2.getValue().serialize()));
+
+        Map<String, String> foodsByBarcodeData = foodsByBarcode
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e2 -> e2.getValue().serialize()));
+
+        Map<String, String> foodReportsData = foodReports
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(e1 -> Long.toString(e1.getKey()), e2 -> e2.getValue().serialize()));
+
+        FileManager.saveTo(foodsByNameData, DEFAULT_FOODS_BY_NAME_FILE_NAME);
+        FileManager.saveTo(foodsByBarcodeData, DEFAULT_FOODS_BY_BARCODE_FILE_NAME);
+        FileManager.saveTo(foodReportsData, DEFAULT_FOOD_REPORT_FILE_NAME);
     }
 }
