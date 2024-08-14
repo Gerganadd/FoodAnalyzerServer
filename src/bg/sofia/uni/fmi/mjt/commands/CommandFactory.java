@@ -1,6 +1,7 @@
 package bg.sofia.uni.fmi.mjt.commands;
 
 import bg.sofia.uni.fmi.mjt.exceptions.UnknownCommandException;
+import bg.sofia.uni.fmi.mjt.regexs.Regex;
 
 import java.util.Arrays;
 import java.util.List;
@@ -9,12 +10,15 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class CommandFactory {
+    private static final int COMMAND_NAME_INDEX = 0;
+    private static final int COMMAND_NAME = 1;
+
     private static final String GET_FOOD_REGEX =
-            CommandType.GET_FOOD.getText() + " [a-zA-z ]+";
+            CommandType.GET_FOOD.getText() + Regex.MATCH_SPACE + Regex.MATCH_ONLY_WORDS;
     private static final String GET_FOOD_REPORT_REGEX =
-            CommandType.GET_FOOD_REPORT.getText() + " [0-9]+";
+            CommandType.GET_FOOD_REPORT.getText() + Regex.MATCH_SPACE + Regex.MATCH_ONLY_DIGITS;
     private static final String GET_FOOD_BY_BARCODE_REGEX =
-            CommandType.GET_FOOD_BY_BARCODE.getText() + "( --((img=[\\w:\\\\.]*)|(code=[0-9]+))){1,2}";
+            CommandType.GET_FOOD_BY_BARCODE.getText() + Regex.MATCH_IMAGE_AND_BARCODE_ATTRIBUTES;
 
     public static Command create(String text) throws UnknownCommandException {
         validateText(text);
@@ -42,17 +46,18 @@ public class CommandFactory {
         Matcher matchGetFoodReport = patternForGetFoodReport.matcher(text);
         Matcher matchGetFoodByBarcode = patternForGetFoodByBarcode.matcher(text);
 
-        boolean r1 = matchGetFood.find();
-        boolean r2 = matchGetFoodReport.find();
-        boolean r3 = matchGetFoodByBarcode.find();
+        boolean res1 = matchGetFood.find();
+        boolean res2 = matchGetFoodReport.find();
+        boolean res3 = matchGetFoodByBarcode.find();
 
-        if (!r1 && !r2 && !r3) {
+        if (!res1 && !res2 && !res3) {
             throw new UnknownCommandException("Unsupported command : " + text);
         }
     }
 
     private static CommandType parseType(String text) throws UnknownCommandException {
-        String commandName = text.split(" ")[0].trim();
+        String[] args = text.split(Regex.MATCH_SPACE);
+        String commandName = args[COMMAND_NAME_INDEX].trim();
 
         try {
             return CommandType.getValueOf(commandName);
@@ -63,8 +68,8 @@ public class CommandFactory {
 
     private static List<String> parseCommandAttributes(String text) {
         return Arrays
-                .stream(text.split(" "))
-                .skip(1).
+                .stream(text.split(Regex.MATCH_SPACE))
+                .skip(COMMAND_NAME).
                 collect(Collectors.toList());
     }
 }
