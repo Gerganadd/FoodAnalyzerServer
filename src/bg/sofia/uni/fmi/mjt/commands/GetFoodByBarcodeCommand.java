@@ -4,6 +4,19 @@ import bg.sofia.uni.fmi.mjt.database.DatabaseManager;
 import bg.sofia.uni.fmi.mjt.foods.Food;
 import bg.sofia.uni.fmi.mjt.regexs.Regex;
 
+import com.google.zxing.Result;
+import com.google.zxing.BinaryBitmap;
+import com.google.zxing.LuminanceSource;
+import com.google.zxing.MultiFormatReader;
+import com.google.zxing.NotFoundException;
+import com.google.zxing.common.HybridBinarizer;
+
+import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class GetFoodByBarcodeCommand extends Command {
@@ -52,6 +65,15 @@ public class GetFoodByBarcodeCommand extends Command {
             throw new IllegalArgumentException("Invalid image path"); //? this type of exception
         }
 
-        //barcode = ... (get barcode from image path) // to-do
+        try {
+            BufferedImage bufferedImage = ImageIO.read(new File(imagePath));
+            LuminanceSource source = new BufferedImageLuminanceSource(bufferedImage);
+            BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+
+            Result result = new MultiFormatReader().decode(bitmap);
+            barcode = result.getText();
+        } catch (NotFoundException | IOException e) {
+            System.out.println("There is problem with parsing the code from the image");
+        }
     }
 }
