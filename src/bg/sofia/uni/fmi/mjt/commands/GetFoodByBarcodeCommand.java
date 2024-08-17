@@ -2,6 +2,8 @@ package bg.sofia.uni.fmi.mjt.commands;
 
 import bg.sofia.uni.fmi.mjt.database.DatabaseManager;
 import bg.sofia.uni.fmi.mjt.foods.Food;
+import bg.sofia.uni.fmi.mjt.logs.Logger;
+import bg.sofia.uni.fmi.mjt.logs.Status;
 import bg.sofia.uni.fmi.mjt.regexs.Regex;
 
 import com.google.zxing.Result;
@@ -62,7 +64,7 @@ public class GetFoodByBarcodeCommand extends Command {
 
     private void parseBarcodeFromImage() {
         if (imagePath == null || imagePath.isBlank()) {
-            throw new IllegalArgumentException("Invalid image path"); //? this type of exception
+            throw new IllegalArgumentException("Image path can't be null or blank"); //? this type of exception
         }
 
         try {
@@ -72,7 +74,15 @@ public class GetFoodByBarcodeCommand extends Command {
 
             Result result = new MultiFormatReader().decode(bitmap);
             barcode = result.getText();
-        } catch (NotFoundException | IOException e) {
+        } catch (NotFoundException e) {
+            String message = "Couldn't find image with path: " + imagePath;
+            Logger.getInstance().addException(Status.NOT_FOUND_ELEMENT, message, e);
+
+            System.out.println(message);
+        } catch (IOException e) {
+            String message = "IO exception occurred in parsing the code from image with path: " + imagePath;
+            Logger.getInstance().addException(Status.UNABLE_TO_READ, message, e);
+
             System.out.println("There is problem with parsing the code from the image");
         }
     }

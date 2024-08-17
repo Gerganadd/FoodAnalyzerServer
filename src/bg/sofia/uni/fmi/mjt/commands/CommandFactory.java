@@ -1,6 +1,8 @@
 package bg.sofia.uni.fmi.mjt.commands;
 
 import bg.sofia.uni.fmi.mjt.exceptions.UnknownCommandException;
+import bg.sofia.uni.fmi.mjt.logs.Logger;
+import bg.sofia.uni.fmi.mjt.logs.Status;
 import bg.sofia.uni.fmi.mjt.regexs.Regex;
 
 import java.util.Arrays;
@@ -35,6 +37,7 @@ public class CommandFactory {
 
     private static void validateText(String text) throws UnknownCommandException {
         if (text == null || text.isBlank()) {
+            //Logger.getInstance().addException(Status.UNKNOWN_COMMAND, "Command can't be null or blank");
             throw new UnknownCommandException("Command can't be null or blank");
         }
 
@@ -51,6 +54,7 @@ public class CommandFactory {
         boolean res3 = matchGetFoodByBarcode.find();
 
         if (!res1 && !res2 && !res3) {
+            //Logger.getInstance().addLog(Status.UNKNOWN_COMMAND, text);
             throw new UnknownCommandException("Unsupported command : " + text);
         }
     }
@@ -62,6 +66,7 @@ public class CommandFactory {
         try {
             return CommandType.getValueOf(commandName);
         } catch (IllegalArgumentException e) {
+            //Logger.getInstance().addLog(Status.UNKNOWN_COMMAND, "Unsupported command name: " + commandName);
             throw new UnknownCommandException("Unsupported command name: " + commandName, e);
         }
     }

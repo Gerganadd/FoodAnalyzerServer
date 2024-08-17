@@ -22,7 +22,7 @@ public enum CommandType {
             return GET_FOOD_BY_BARCODE;
         }
 
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException("Unknown command type: " + text);
     }
 
     public String getText() {
