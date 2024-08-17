@@ -12,7 +12,7 @@ public class FileManager {
     private static final String SEPARATOR = ":";
     private static final String ROW_FORMAT = "%s" + SEPARATOR + "%s" + "\n";
     private static final int KEY_INDEX = 0;
-    private static final int VALUE_INDEX = 0;
+    private static final int VALUE_INDEX = 1;
 
     public static void saveTo(Map<String, String> info, String filename) {
         try (FileWriter writer = new FileWriter(filename)) {
