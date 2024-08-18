@@ -19,7 +19,11 @@ public record Foods(List<Food> foods) implements Serializable {
     }
 
     public String serialize() {
-        List<String> args = foods.stream().map(Food::serialize).toList();
+        List<String> args = foods
+                .stream()
+                .map(Food::serialize)
+                .toList();
+
         return String.join(SEPARATOR, args);
     }
 }

@@ -6,6 +6,8 @@ import bg.sofia.uni.fmi.mjt.foods.Foods;
 import java.util.List;
 
 public class GetFoodCommand extends Command {
+    public static final String DELIMITER = " ";
+
     public GetFoodCommand(List<String> attributes) {
         super(attributes);
     }
@@ -13,7 +15,7 @@ public class GetFoodCommand extends Command {
     //to-do write documentation
     @Override
     public String execute() {
-        String foodName = String.join(" ", getAttributes());
+        String foodName = String.join(DELIMITER, getAttributes());
 
         Foods result = DatabaseManager.getInstance().getFoodsByName(foodName);
 
