@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class CommandFactory {
     private static final int COMMAND_NAME_INDEX = 0;

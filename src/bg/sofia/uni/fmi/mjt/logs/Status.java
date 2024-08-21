@@ -6,7 +6,6 @@ public enum Status {
     OPEN_SERVER,
     CLOSE_SERVER,
 
-
     NOT_FOUND_ELEMENT,
     UNSUCCESSFUL_CONNECTION,
     UNABLE_TO_READ,
