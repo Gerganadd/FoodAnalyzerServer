@@ -7,6 +7,7 @@ import bg.sofia.uni.fmi.mjt.exceptions.UnknownCommandException;
 import bg.sofia.uni.fmi.mjt.logs.Logger;
 import bg.sofia.uni.fmi.mjt.logs.Status;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 import java.net.InetSocketAddress;
@@ -21,28 +22,35 @@ import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.Set;
 
-public class Server {
+public class Server implements Closeable {
     private static final int DEFAULT_SERVER_PORT = 8888;
     private static final String DEFAULT_SERVER_HOST = "localhost";
     private static final int BUFFER_SIZE = 1024;
 
     private boolean isWorking;
     private Selector selector;
+    private ServerSocketChannel serverSocketChannel;
     private ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
 
     public static void main(String[] args) {
-        Server server = new Server();
-        server.start();
+        try (Server server = new Server()) {
+            server.start();
+
+            System.out.println("Stop server at " + System.currentTimeMillis());
+        } catch (IOException e) {
+            System.out.println("Problem with closing the server at " + System.currentTimeMillis());
+        }
     }
 
-    public void start() {
-        Logger.getInstance().addLog(Status.OPEN_SERVER, "Start server"); // + at time: ...
+    public void start() throws IOException {
+        System.out.println("Start server at " + System.currentTimeMillis());
+        Logger.getInstance().addLog(Status.OPEN_SERVER, "Start server at " + System.currentTimeMillis());
 
-        try (ServerSocketChannel serverSocketChannel = ServerSocketChannel.open()) {
-            configureServerSocket(serverSocketChannel);
-
+        try {
             selector = Selector.open();
-            serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+            serverSocketChannel = ServerSocketChannel.open();
+
+            configureServerSocket();
             isWorking = true;
 
             while (isWorking) {
@@ -53,32 +61,20 @@ public class Server {
 
                 serviceAllReadySocketChannels();
             }
-        } catch (IOException e) {
+        } catch (IOException e) { //? Selector.close()
             String message = "Server has problem with connection";
             Logger.getInstance().addException(Status.UNABLE_TO_START_SERVER, message, e);
 
-            throw new RuntimeException("There is a problem with the server socket", e);
-        }
+            throw new IOException("There is a problem with the server socket", e);
+        } catch (UnknownCommandException e) {
+            Logger.getInstance().addException(Status.UNABLE_TO_SERVICE_CHANNEL,
+                    "Wrong command format", e); // Unable to execute command
 
-        stop(); // ?
+            System.out.println("Wrong command");
+        }
     }
 
-    public void stop() {
-        isWorking = false;
-
-        if (selector.isOpen()) { // ?
-            selector.wakeup();
-        }
-
-        DatabaseManager.getInstance().saveData();
-
-        Logger.getInstance().addLog(Status.CLOSE_SERVER, "Server stop"); // + at time: ...
-
-        Logger.getInstance().saveLogs();
-        Logger.getInstance().saveExceptions();
-    }
-
-    private void serviceAllReadySocketChannels() {
+    private void serviceAllReadySocketChannels() throws IOException, UnknownCommandException {
         Set<SelectionKey> selectedKeys = selector.selectedKeys();
         Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
 
@@ -86,47 +82,34 @@ public class Server {
             SelectionKey key = keyIterator.next();
 
             if (key.isReadable()) {
-                serviceCurrentSocketChannel(key);
+                System.out.println("Service client at " + System.currentTimeMillis());
+                SocketChannel client = (SocketChannel) key.channel();
+
+                String clientInput = getRequestFromClient(client);
+                if (clientInput == null) { // client disconnect
+                    keyIterator.remove();
+                    break;
+                }
+
+                Command clientCommand = CommandFactory.create(clientInput);
+                String respond = clientCommand.execute() + "\n";
+
+                sendRespondToClient(respond, client);
             } else if (key.isAcceptable()) {
-                accept(key);
+                accept();
             }
 
             keyIterator.remove();
         }
     }
 
-    private void serviceCurrentSocketChannel(SelectionKey key) {
-        try {
-            SocketChannel client = (SocketChannel) key.channel();
+    private void accept() throws IOException {
+        System.out.println("Accept new client at " + System.currentTimeMillis());
 
-            String clientInput = getRequestFromClient(client);
-            if (clientInput == null) { // client disconnect
-                return;
-            }
+        SocketChannel accept = serverSocketChannel.accept();
 
-            Command clientCommand = CommandFactory.create(clientInput);
-            String respond = clientCommand.execute() + "\n";
-
-            sendRespondToClient(respond, client);
-        } catch (IOException e) {
-            Logger.getInstance().addException(Status.UNABLE_TO_SERVICE_CHANNEL,
-                    "Have problem with IO communication", e);
-        } catch (UnknownCommandException | IllegalArgumentException e) {
-            Logger.getInstance().addException(Status.UNABLE_TO_SERVICE_CHANNEL,
-                    "Client input wrong command", e); // Unable to execute command
-        }
-    }
-
-    private void accept(SelectionKey key) {
-        try (ServerSocketChannel sockChannel = (ServerSocketChannel) key.channel()) {
-            SocketChannel accept = sockChannel.accept();
-
-            accept.configureBlocking(false);
-            accept.register(selector, SelectionKey.OP_READ);
-        } catch (IOException e) {
-            String message = "Client couldn't connect to server";
-            Logger.getInstance().addException(Status.UNSUCCESSFUL_CONNECTION, message, e);
-        }
+        accept.configureBlocking(false);
+        accept.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
     }
 
     private String getRequestFromClient(SocketChannel clientChannel) throws IOException {
@@ -135,7 +118,8 @@ public class Server {
 
             int r = clientChannel.read(buffer);
             if (r < 0) {
-                clientChannel.close();
+                System.out.println("Closing chanel at: " + System.currentTimeMillis());
+                clientChannel.close(); //?
                 return null;
             }
 
@@ -147,9 +131,10 @@ public class Server {
             return new String(clientInputBytes, StandardCharsets.UTF_8);
         } catch (IOException e) {
             String message = "Couldn't read the client input";
+            System.out.println(message); //
             Logger.getInstance().addException(Status.UNABLE_TO_READ, message, e);
 
-            throw e;
+            throw new IOException(message, e);
         }
     }
 
@@ -164,13 +149,32 @@ public class Server {
             String message = "Couldn't send result to the client";
             Logger.getInstance().addException(Status.UNABLE_TO_WRITE, message, e);
 
-            throw e;
+            throw new IOException(message, e);
         }
     }
 
-    private void configureServerSocket(ServerSocketChannel serverChannel) throws IOException {
-        serverChannel.bind(new InetSocketAddress(DEFAULT_SERVER_HOST, DEFAULT_SERVER_PORT));
-        serverChannel.configureBlocking(false);
+    private void configureServerSocket() throws IOException {
+        serverSocketChannel.bind(new InetSocketAddress(DEFAULT_SERVER_HOST, DEFAULT_SERVER_PORT));
+        serverSocketChannel.configureBlocking(false);
+        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
     }
 
+    @Override
+    public void close() throws IOException {
+        isWorking = false;
+
+        if (selector.isOpen()) { // ?
+            selector.wakeup();
+        }
+
+        selector.close();
+        serverSocketChannel.close();
+
+        DatabaseManager.getInstance().saveData();
+
+        Logger.getInstance().addLog(Status.CLOSE_SERVER, "Server stop at " + System.currentTimeMillis()); 
+
+        Logger.getInstance().saveLogs();
+        Logger.getInstance().saveExceptions();
+    }
 }
