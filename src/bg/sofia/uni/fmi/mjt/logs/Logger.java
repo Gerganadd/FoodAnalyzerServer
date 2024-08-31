@@ -3,6 +3,7 @@ package bg.sofia.uni.fmi.mjt.logs;
 import bg.sofia.uni.fmi.mjt.database.FileManager;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -12,6 +13,7 @@ public class Logger {
     private static final String DEFAULT_EXCEPTIONS_FILE_NAME = "ServerExceptionsLogs.txt";
     private static final String LOGS_FORMAT = "%s - %s: %s \n";
     private static final String EXCEPTIONS_LOGS_FORMAT = "%s - %s: %s, stackTreatise: %s \n";
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm:ss");
 
     private static Logger instance;
     private List<String> logs = new ArrayList<>();
@@ -27,14 +29,21 @@ public class Logger {
 
     public void addException(Status status, String message, Exception exception) {
         List<StackTraceElement> stackTrace = Arrays.stream(exception.getStackTrace()).toList();
+        String time = LocalDateTime.now().format(DATE_TIME_FORMATTER);
 
         exceptionsLogs.add(String.format(EXCEPTIONS_LOGS_FORMAT,
-                LocalDateTime.now(), status, message, stackTrace));
+                time, status, message, stackTrace));
     }
 
     public void addLog(Status status, String message) {
+        String time = LocalDateTime.now().format(DATE_TIME_FORMATTER);
+
         logs.add(String.format(LOGS_FORMAT,
-                LocalDateTime.now(), status, message));
+                time, status, message));
+    }
+
+    public void addLog(Status status) {
+        addLog(status, " ");
     }
 
     public void saveLogs(String filename) {
