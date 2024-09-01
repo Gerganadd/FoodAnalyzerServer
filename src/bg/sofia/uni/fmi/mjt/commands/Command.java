@@ -1,5 +1,7 @@
 package bg.sofia.uni.fmi.mjt.commands;
 
+import bg.sofia.uni.fmi.mjt.exceptions.NoSuchElementException;
+
 import java.util.List;
 
 public abstract class Command {
@@ -14,5 +16,5 @@ public abstract class Command {
     }
 
     //to-do write documentation
-    public abstract String execute();
+    public abstract String execute() throws NoSuchElementException;
 }

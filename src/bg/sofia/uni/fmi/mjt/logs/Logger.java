@@ -42,10 +42,6 @@ public class Logger {
                 time, status, message));
     }
 
-    public void addLog(Status status) {
-        addLog(status, " ");
-    }
-
     public void saveLogs(String filename) {
         if (filename == null || filename.isBlank()) {
             filename = DEFAULT_FILE_NAME;

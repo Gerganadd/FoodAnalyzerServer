@@ -1,5 +1,6 @@
 package bg.sofia.uni.fmi.mjt.commands;
 
+import bg.sofia.uni.fmi.mjt.exceptions.ExceptionMessages;
 import bg.sofia.uni.fmi.mjt.exceptions.UnknownCommandException;
 import bg.sofia.uni.fmi.mjt.regexs.Regex;
 
@@ -34,8 +35,10 @@ public class CommandFactory {
 
     private static void validateText(String text) throws UnknownCommandException {
         if (text == null || text.isBlank()) {
-            throw new UnknownCommandException("Command can't be null or blank");
+            throw new UnknownCommandException(ExceptionMessages.COMMAND_NULL_OR_BLANK);
         }
+
+        text = text.trim();
 
         Pattern patternForGetFood = Pattern.compile(GET_FOOD_REGEX);
         Pattern patternForGetFoodReport = Pattern.compile(GET_FOOD_REPORT_REGEX);
@@ -45,24 +48,31 @@ public class CommandFactory {
         Matcher matchGetFoodReport = patternForGetFoodReport.matcher(text);
         Matcher matchGetFoodByBarcode = patternForGetFoodByBarcode.matcher(text);
 
-        boolean res1 = matchGetFood.find();
-        boolean res2 = matchGetFoodReport.find();
-        boolean res3 = matchGetFoodByBarcode.find();
+        boolean res1 = matchGetFood.matches();
+        boolean res2 = matchGetFoodReport.matches();
+        boolean res3 = matchGetFoodByBarcode.matches();
 
         if (!res1 && !res2 && !res3) {
-            throw new UnknownCommandException("Unsupported command : " + text);
+            String message = generateExceptionMessage(text);
+            throw new UnknownCommandException(message);
         }
     }
 
     private static CommandType parseType(String text) throws UnknownCommandException {
-        String[] args = text.split(Regex.MATCH_SPACE);
-        String commandName = args[COMMAND_NAME_INDEX].trim();
+        String commandName = getCommandName(text);
 
         try {
             return CommandType.getValueOf(commandName);
         } catch (IllegalArgumentException e) {
-            throw new UnknownCommandException("Unsupported command name: " + commandName, e);
+            throw new UnknownCommandException(
+                    ExceptionMessages.UNKNOWN_COMMAND_TYPE + commandName, e);
         }
+    }
+
+    private static String getCommandName(String command) {
+        return command
+                .split(Regex.MATCH_SPACE)[COMMAND_NAME_INDEX]
+                .trim();
     }
 
     private static List<String> parseCommandAttributes(String text) {
@@ -70,5 +80,21 @@ public class CommandFactory {
                 .stream(text.trim().split(Regex.MATCH_SPACE))
                 .skip(COMMAND_NAME)
                 .toList();
+    }
+
+    private static String generateExceptionMessage(String command) {
+        try {
+            CommandType commandType = parseType(command);
+
+            String commandDescription = switch (commandType) {
+                case GET_FOOD -> ExceptionMessages.GET_FOOD_COMMAND_DESCRIPTION;
+                case GET_FOOD_REPORT -> ExceptionMessages.GET_FOOD_REPORT_COMMAND_DESCRIPTION;
+                case GET_FOOD_BY_BARCODE -> ExceptionMessages.GET_FOOD_BY_BARCODE_COMMAND_DESCRIPTION;
+            };
+
+            return ExceptionMessages.INVALID_COMMAND_ATTRIBUTES + commandDescription;
+        } catch (UnknownCommandException e) {
+            return e.getMessage();
+        }
     }
 }

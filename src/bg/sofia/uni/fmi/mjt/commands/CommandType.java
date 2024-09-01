@@ -1,5 +1,7 @@
 package bg.sofia.uni.fmi.mjt.commands;
 
+import bg.sofia.uni.fmi.mjt.exceptions.ExceptionMessages;
+
 public enum CommandType {
     GET_FOOD("get-food"),
     GET_FOOD_REPORT("get-food-report"),
@@ -22,7 +24,7 @@ public enum CommandType {
             return GET_FOOD_BY_BARCODE;
         }
 
-        throw new IllegalArgumentException("Unknown command type: " + text);
+        throw new IllegalArgumentException(ExceptionMessages.UNKNOWN_COMMAND_TYPE + text);
     }
 
     public String getText() {

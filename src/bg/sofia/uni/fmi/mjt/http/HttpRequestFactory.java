@@ -1,5 +1,6 @@
 package bg.sofia.uni.fmi.mjt.http;
 
+import bg.sofia.uni.fmi.mjt.exceptions.ExceptionMessages;
 import bg.sofia.uni.fmi.mjt.regexs.Regex;
 
 import java.net.URI;
@@ -11,7 +12,11 @@ public class HttpRequestFactory {
     private static final String SITE_URL = "https://api.nal.usda.gov/fdc/";
     private static final String API_KEY_VALUE = "2vPhFALHihIOLVYt0VjFvRJJjpFRsnFGR38NoM8K";
     private static final String API_KEY = String.format("api_key=%s", API_KEY_VALUE);
+
+    private static final String SEARCH_BY_VALUE = "%s%s?query=%s%s&%s";
+    private static final String SEARCH_BY_ID = "%sv1/food/%s?%s";
     private static final String SEARCH_PRODUCT_BY = "v1/foods/search";
+
     private static final String MATCH_ALL_WORDS = "&requireAllWords=true";
     private static final String HTTP_VERSION_OF_SPACE = "%20";
 
@@ -54,12 +59,12 @@ public class HttpRequestFactory {
     }
 
     private static String createQueryForSearchByValue(String value) {
-        return String.format("%s%s?query=%s%s&%s",
+        return String.format(SEARCH_BY_VALUE,
                 SITE_URL, SEARCH_PRODUCT_BY, value, MATCH_ALL_WORDS, API_KEY);
     }
 
     private static String createQueryForSearchById(String fdcId) {
-        return String.format("%sv1/food/%s?%s",
+        return String.format(SEARCH_BY_ID,
                 SITE_URL, fdcId, API_KEY);
     }
 
@@ -69,7 +74,7 @@ public class HttpRequestFactory {
 
     private static void validateProductName(String productName) {
         if (productName == null || productName.isBlank()) {
-            throw new IllegalArgumentException("Product name can't be null or blank");
+            throw new IllegalArgumentException(ExceptionMessages.PRODUCT_NAME_NULL_OR_BLANK);
         }
 
         productName = productName.trim();
@@ -79,13 +84,13 @@ public class HttpRequestFactory {
         Matcher matcher = pattern.matcher(productName);
 
         if (!matcher.find()) {
-            throw new IllegalArgumentException("Product name must contains only words separated by space");
+            throw new IllegalArgumentException(ExceptionMessages.PRODUCT_NAME_DESCRIPTION);
         }
     }
 
-    private static void validateCode(String code, String codeName) {
+    private static void validateCode(String code, String codeName) { //?
         if (code == null || code.isBlank()) {
-            throw new IllegalArgumentException(codeName + " code can't be null or blank");
+            throw new IllegalArgumentException(codeName + ExceptionMessages.CODE_NULL_OR_BLANK);
         }
 
         code = code.trim();
@@ -95,8 +100,7 @@ public class HttpRequestFactory {
         Matcher matcher = pattern.matcher(code);
 
         if (!matcher.find()) {
-            throw new IllegalArgumentException(codeName + " code must contains only digits");
+            throw new IllegalArgumentException(codeName + ExceptionMessages.CODE_REQUIREMENTS);
         }
     }
-
 }

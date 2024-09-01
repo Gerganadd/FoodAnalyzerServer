@@ -1,6 +1,8 @@
 package bg.sofia.uni.fmi.mjt.commands;
 
 import bg.sofia.uni.fmi.mjt.database.DatabaseManager;
+import bg.sofia.uni.fmi.mjt.exceptions.ExceptionMessages;
+import bg.sofia.uni.fmi.mjt.exceptions.NoSuchElementException;
 import bg.sofia.uni.fmi.mjt.foods.Food;
 import bg.sofia.uni.fmi.mjt.logs.Logger;
 import bg.sofia.uni.fmi.mjt.logs.Status;
@@ -28,6 +30,7 @@ public class GetFoodByBarcodeCommand extends Command {
 
     private String barcode;
     private String imagePath;
+
     public GetFoodByBarcodeCommand(List<String> attributes) {
         super(attributes);
 
@@ -37,7 +40,7 @@ public class GetFoodByBarcodeCommand extends Command {
 
     //to-do write documentation
     @Override
-    public String execute() {
+    public String execute() throws NoSuchElementException {
         if (barcode == null) {
             parseBarcodeFromImage();
         }
@@ -64,7 +67,7 @@ public class GetFoodByBarcodeCommand extends Command {
 
     private void parseBarcodeFromImage() {
         if (imagePath == null || imagePath.isBlank()) {
-            throw new IllegalArgumentException("Image path can't be null or blank"); //? this type of exception
+            throw new IllegalArgumentException(ExceptionMessages.IMAGE_PATH_NULL_OR_BLANK);
         }
 
         try {
@@ -75,15 +78,11 @@ public class GetFoodByBarcodeCommand extends Command {
             Result result = new MultiFormatReader().decode(bitmap);
             barcode = result.getText();
         } catch (NotFoundException e) {
-            String message = "Couldn't find image with path: " + imagePath;
+            String message = ExceptionMessages.IMAGE_PATH_DOES_NOT_EXIST + imagePath;
             Logger.getInstance().addException(Status.NOT_FOUND_ELEMENT, message, e);
-
-            System.out.println(message);
         } catch (IOException e) {
-            String message = "IO exception occurred in parsing the code from image with path: " + imagePath;
+            String message = ExceptionMessages.IMAGE_DOES_NOT_CONTAINS_CODE + imagePath;
             Logger.getInstance().addException(Status.UNABLE_TO_READ, message, e);
-
-            System.out.println("There is problem with parsing the code from the image");
         }
     }
 }

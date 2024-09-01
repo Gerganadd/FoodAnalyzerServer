@@ -3,6 +3,8 @@ package bg.sofia.uni.fmi.mjt;
 import bg.sofia.uni.fmi.mjt.commands.Command;
 import bg.sofia.uni.fmi.mjt.commands.CommandFactory;
 import bg.sofia.uni.fmi.mjt.database.DatabaseManager;
+import bg.sofia.uni.fmi.mjt.exceptions.ExceptionMessages;
+import bg.sofia.uni.fmi.mjt.exceptions.NoSuchElementException;
 import bg.sofia.uni.fmi.mjt.exceptions.UnknownCommandException;
 import bg.sofia.uni.fmi.mjt.logs.Logger;
 import bg.sofia.uni.fmi.mjt.logs.Status;
@@ -23,6 +25,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 public class Server implements Closeable {
+    private static final String RESPOND_FORMATTER = "%s\n";
     private static final int DEFAULT_SERVER_PORT = 8888;
     private static final String DEFAULT_SERVER_HOST = "localhost";
     private static final int BUFFER_SIZE = 1024;
@@ -35,16 +38,15 @@ public class Server implements Closeable {
     public static void main(String[] args) {
         try (Server server = new Server()) {
             server.start();
-
-            System.out.println("Stop server at " + System.currentTimeMillis());
         } catch (IOException e) {
-            System.out.println("Problem with closing the server at " + System.currentTimeMillis());
+            System.out.println("Problem with server"); // add log
+            System.out.println(e.getMessage());
         }
     }
 
     public void start() throws IOException {
-        System.out.println("Start server at " + System.currentTimeMillis());
-        Logger.getInstance().addLog(Status.OPEN_SERVER, "Start server at " + System.currentTimeMillis());
+        System.out.println("Start server"); // to-do delete it
+        Logger.getInstance().addLog(Status.OPEN_SERVER, "Server start successfully");
 
         try {
             selector = Selector.open();
@@ -61,20 +63,15 @@ public class Server implements Closeable {
 
                 serviceAllReadySocketChannels();
             }
-        } catch (IOException e) { //? Selector.close()
+        } catch (IOException e) {
             String message = "Server has problem with connection";
-            Logger.getInstance().addException(Status.UNABLE_TO_START_SERVER, message, e);
+            Logger.getInstance().addException(Status.UNABLE_TO_START_SERVER, message, e); ///////!!!!!!
 
-            throw new IOException("There is a problem with the server socket", e);
-        } catch (UnknownCommandException e) {
-            Logger.getInstance().addException(Status.UNABLE_TO_SERVICE_CHANNEL,
-                    "Wrong command format", e); // Unable to execute command
-
-            System.out.println("Wrong command");
+            throw new IOException("There is a problem with the server socket: " + e.getMessage(), e);
         }
     }
 
-    private void serviceAllReadySocketChannels() throws IOException, UnknownCommandException {
+    private void serviceAllReadySocketChannels() throws IOException {
         Set<SelectionKey> selectedKeys = selector.selectedKeys();
         Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
 
@@ -82,19 +79,17 @@ public class Server implements Closeable {
             SelectionKey key = keyIterator.next();
 
             if (key.isReadable()) {
-                System.out.println("Service client at " + System.currentTimeMillis());
                 SocketChannel client = (SocketChannel) key.channel();
 
                 String clientInput = getRequestFromClient(client);
+
                 if (clientInput == null) { // client disconnect
                     keyIterator.remove();
+                    saveData(); // save the information every time when client disconnect
                     break;
                 }
 
-                Command clientCommand = CommandFactory.create(clientInput);
-                String respond = clientCommand.execute() + "\n";
-
-                sendRespondToClient(respond, client);
+                serviceClient(clientInput, client);
             } else if (key.isAcceptable()) {
                 accept();
             }
@@ -103,13 +98,51 @@ public class Server implements Closeable {
         }
     }
 
+    private void serviceClient(String clientInput, SocketChannel clientChannel) throws IOException {
+        try {
+            Command clientCommand = CommandFactory.create(clientInput);
+            String respond = clientCommand.execute();
+
+            sendRespondToClient(respond, clientChannel);
+
+            System.out.println("Service client"); // to-do delete it
+        } catch (UnknownCommandException e) {
+            Logger.getInstance().addException(Status.UNKNOWN_COMMAND,
+                    e.getMessage(), e);
+
+            sendRespondToClient(e.getMessage(), clientChannel);
+
+            System.out.println("Unknown command"); // to-do delete it
+        } catch (NoSuchElementException e) {
+            Logger.getInstance().addException(Status.NOT_FOUND_ELEMENT,
+                    e.getMessage(), e);
+
+            sendRespondToClient(e.getMessage(), clientChannel);
+
+            System.out.println("No such element"); // to-do delete it
+        } catch (IOException e) {
+            Logger.getInstance().addException(Status.UNABLE_TO_SERVICE_CHANNEL,
+                    "Problem with sending the response to client", e);
+
+            System.out.println("Problem with sending the response to the client"); // to-do delete it
+            throw new IOException("Exception occurred during service client socket", e);
+        }
+    }
+
     private void accept() throws IOException {
-        System.out.println("Accept new client at " + System.currentTimeMillis());
+        try {
+            SocketChannel accept = serverSocketChannel.accept();
 
-        SocketChannel accept = serverSocketChannel.accept();
+            accept.configureBlocking(false);
+            accept.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
 
-        accept.configureBlocking(false);
-        accept.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+            System.out.println("Accept new client"); // to-do delete it
+        } catch (IOException e) {
+            Logger.getInstance().addException(Status.UNSUCCESSFUL_CONNECTION,
+                    "Unable to accept new client", e);
+
+            throw new IOException("Unable to accept new client", e);
+        }
     }
 
     private String getRequestFromClient(SocketChannel clientChannel) throws IOException {
@@ -140,8 +173,10 @@ public class Server implements Closeable {
 
     private void sendRespondToClient(String respond, SocketChannel clientChannel) throws IOException {
         try {
+            String formattedRespond = String.format(RESPOND_FORMATTER, respond);
+
             buffer.clear();
-            buffer.put(respond.getBytes());
+            buffer.put(formattedRespond.getBytes());
             buffer.flip();
 
             clientChannel.write(buffer);
@@ -159,22 +194,31 @@ public class Server implements Closeable {
         serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
     }
 
+    private void saveData() {
+        DatabaseManager.getInstance().saveData();
+
+        Logger.getInstance().saveLogs();
+        Logger.getInstance().saveExceptions();
+    }
+
     @Override
-    public void close() throws IOException {
+    public void close() {
         isWorking = false;
 
         if (selector.isOpen()) { // ?
             selector.wakeup();
         }
 
-        selector.close();
-        serverSocketChannel.close();
+        Logger.getInstance().addLog(Status.CLOSE_SERVER, "Server stop successfully"); //?
 
-        DatabaseManager.getInstance().saveData();
+        try {
+            selector.close();
+            serverSocketChannel.close();
+        } catch (IOException e) {
+            Logger.getInstance().addException(Status.CLOSE_SERVER,
+                    ExceptionMessages.PROBLEM_WITH_CLOSING_THE_SERVER, e);
+        }
 
-        Logger.getInstance().addLog(Status.CLOSE_SERVER, "Server stop at " + System.currentTimeMillis()); 
-
-        Logger.getInstance().saveLogs();
-        Logger.getInstance().saveExceptions();
+        saveData();
     }
 }

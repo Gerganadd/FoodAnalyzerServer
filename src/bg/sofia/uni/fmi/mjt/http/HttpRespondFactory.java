@@ -1,5 +1,7 @@
 package bg.sofia.uni.fmi.mjt.http;
 
+import bg.sofia.uni.fmi.mjt.exceptions.ExceptionMessages;
+import bg.sofia.uni.fmi.mjt.exceptions.NoSuchElementException;
 import bg.sofia.uni.fmi.mjt.foods.Food;
 import bg.sofia.uni.fmi.mjt.foods.FoodReport;
 import bg.sofia.uni.fmi.mjt.foods.Foods;
@@ -19,35 +21,52 @@ public class HttpRespondFactory {
         // don't want instances of this class
     }
 
-    public static Foods getFoodsByNameFromApi(String name) {
-        //to-do validate name
+    public static Foods getFoodsByNameFromApi(String name) throws NoSuchElementException {
+        //to-do validate code
 
         HttpRequest requestForFoodByKeyword = HttpRequestFactory.createRequestForFoodsByName(name);
         HttpResponse<String> responseFromApi = getFromApi(requestForFoodByKeyword);
 
-        Foods respond = gson.fromJson(responseFromApi.body(), Foods.class);
+        Foods result = gson.fromJson(responseFromApi.body(), Foods.class);
 
-        return respond;
+        if (result.foods().isEmpty()) { // Api does not contain information
+            throw new NoSuchElementException(
+                    ExceptionMessages.FOOD_NAME_DOES_NOT_CONTAINS + name);
+        }
+
+        return result;
     }
 
-    public static Food getFoodByBarcodeFromApi(String code) {
+    public static Food getFoodByBarcodeFromApi(String code) throws NoSuchElementException {
         //to-do validate code
 
         HttpRequest requestForFoodByKeyword = HttpRequestFactory.createRequestForFoodByGtinUpcCode(code);
         HttpResponse<String> responseFromApi = getFromApi(requestForFoodByKeyword);
 
-        Foods respond = gson.fromJson(responseFromApi.body(), Foods.class);
+        Foods result = gson.fromJson(responseFromApi.body(), Foods.class);
 
-        return respond.foods().getFirst();
+        if (result.foods().isEmpty()) { // Api does not contain information
+            throw new NoSuchElementException(
+                    ExceptionMessages.GTIN_UPC_CODE_DOES_NOT_CONTAINS + code);
+        }
+
+        return result.foods().getFirst();
     }
 
-    public static FoodReport getFoodReportByFdcIdFromApi(String fdcId) {
+    public static FoodReport getFoodReportByFdcIdFromApi(String fdcId) throws NoSuchElementException {
         //to-do validate fdcId
 
         HttpRequest requestByFcdId = HttpRequestFactory.createRequestForFoodByFcdId(fdcId);
         HttpResponse<String> responseFromApi = getFromApi(requestByFcdId);
 
-        return gson.fromJson(responseFromApi.body(), FoodReport.class);
+        FoodReport result = gson.fromJson(responseFromApi.body(), FoodReport.class);
+
+        if (result == null) {
+            throw new NoSuchElementException(
+                    ExceptionMessages.FCD_ID_DOES_NOT_CONTAINS + fdcId);
+        }
+
+        return result;
     }
 
     private static HttpResponse<String> getFromApi(HttpRequest request) {

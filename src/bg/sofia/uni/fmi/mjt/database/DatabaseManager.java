@@ -1,5 +1,6 @@
 package bg.sofia.uni.fmi.mjt.database;
 
+import bg.sofia.uni.fmi.mjt.exceptions.NoSuchElementException;
 import bg.sofia.uni.fmi.mjt.foods.Food;
 import bg.sofia.uni.fmi.mjt.foods.FoodReport;
 import bg.sofia.uni.fmi.mjt.foods.Foods;
@@ -14,9 +15,7 @@ public class DatabaseManager {
     private static final String DEFAULT_FOODS_BY_NAME_FILE_NAME = "foodsByName.txt";
     private static final String DEFAULT_FOOD_REPORT_FILE_NAME = "food-reports.txt";
     private static final String DEFAULT_FOODS_BY_BARCODE_FILE_NAME = "foodsByBarcode.txt";
-
     private static DatabaseManager manager;
-
     private Map<String, Foods> foodsByName = new HashMap<>();
     private Map<Long, FoodReport> foodReports = new HashMap<>();
     private Map<String, Food> foodsByBarcode = new HashMap<>();
@@ -35,6 +34,8 @@ public class DatabaseManager {
     }
 
     private void loadFoodsByName() {
+        Map<String, String> databaseResult = FileManager.loadFrom(DEFAULT_FOODS_BY_NAME_FILE_NAME);
+
         Map<String, Foods> fileInfo = FileManager.loadFrom(DEFAULT_FOODS_BY_NAME_FILE_NAME)
                 .entrySet()
                 .stream()
@@ -64,19 +65,34 @@ public class DatabaseManager {
         foodReports.putAll(fileInfo);
     }
 
-    public Foods getFoodsByName(String name) {
+    private void addAllFoodsWithGtinUpcCodeFromResultInDatabase(Foods result) { // to-do change name
+        for (Food food : result.foods()) {
+            String gtinUpcCode = food.gtinUpc();
+            if (gtinUpcCode == null || gtinUpcCode.isBlank()) { // || gtinUpcCode.equals("null")) {
+                continue;
+            }
+
+            if (!foodsByBarcode.containsKey(gtinUpcCode)) {
+                foodsByBarcode.put(gtinUpcCode, food);
+            }
+        }
+    }
+
+    public Foods getFoodsByName(String name) throws NoSuchElementException {
         if (foodsByName.containsKey(name)) {
             return foodsByName.get(name);
         }
 
         Foods result = HttpRespondFactory.getFoodsByNameFromApi(name);
 
+        addAllFoodsWithGtinUpcCodeFromResultInDatabase(result);
+
         foodsByName.put(name, result);
 
         return result;
     }
 
-    public FoodReport getFoodReportBy(long fdcId) {
+    public FoodReport getFoodReportBy(long fdcId) throws NoSuchElementException {
         if (foodReports.containsKey(fdcId)) {
             return foodReports.get(fdcId);
         }
@@ -89,7 +105,7 @@ public class DatabaseManager {
         return result;
     }
 
-    public Food getFoodByBarcode(String gtinUpc) {
+    public Food getFoodByBarcode(String gtinUpc) throws NoSuchElementException {
         if (foodsByBarcode.containsKey(gtinUpc)) {
             return foodsByBarcode.get(gtinUpc);
         }

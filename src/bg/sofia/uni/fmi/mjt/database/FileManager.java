@@ -15,7 +15,7 @@ import java.util.Map;
 
 public class FileManager {
     private static final String SEPARATOR = ":";
-    private static final String ROW_FORMAT = "%s" + SEPARATOR + "%s" + "\n";
+    private static final String ROW_FORMAT = "%s" + SEPARATOR + "%s\n";
     private static final int KEY_INDEX = 0;
     private static final int VALUE_INDEX = 1;
 

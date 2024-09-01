@@ -1,6 +1,7 @@
 package bg.sofia.uni.fmi.mjt.commands;
 
 import bg.sofia.uni.fmi.mjt.database.DatabaseManager;
+import bg.sofia.uni.fmi.mjt.exceptions.NoSuchElementException;
 import bg.sofia.uni.fmi.mjt.foods.Foods;
 
 import java.util.List;
@@ -14,7 +15,7 @@ public class GetFoodCommand extends Command {
 
     //to-do write documentation
     @Override
-    public String execute() {
+    public String execute() throws NoSuchElementException {
         String foodName = String.join(DELIMITER, getAttributes());
 
         Foods result = DatabaseManager.getInstance().getFoodsByName(foodName);
