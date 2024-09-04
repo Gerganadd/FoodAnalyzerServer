@@ -38,7 +38,6 @@ public class GetFoodByBarcodeCommand extends Command {
         parseImage(attributes);
     }
 
-    //to-do write documentation
     @Override
     public String execute() throws NoSuchElementException {
         if (barcode == null) {

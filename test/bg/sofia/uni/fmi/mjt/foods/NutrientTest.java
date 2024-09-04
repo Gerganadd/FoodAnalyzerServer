@@ -8,9 +8,9 @@ public class NutrientTest {
     private static final Nutrient N1 = new Nutrient(1.2345);
     private static final Nutrient N2 = new Nutrient(0);
     private static final Nutrient N3 = new Nutrient(0.002);
-    private static final String SERIALIZED_N1 = "1,23";
-    private static final String SERIALIZED_N2 = "0,00";
-    private static final String SERIALIZED_N3 = "0,00"; //? 0.01
+    private static final String SERIALIZED_N1 = "1.2345";
+    private static final String SERIALIZED_N2 = "0.0";
+    private static final String SERIALIZED_N3 = "0.002";
 
     @Test
     void testSerializeIsCorrect() {

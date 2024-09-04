@@ -13,7 +13,6 @@ public class GetFoodCommand extends Command {
         super(attributes);
     }
 
-    //to-do write documentation
     @Override
     public String execute() throws NoSuchElementException {
         String foodName = String.join(DELIMITER, getAttributes());

@@ -10,10 +10,10 @@ public class ExceptionMessages {
     public static final String IMAGE_DOES_NOT_CONTAINS_CODE = "There is problem with parsing the code from the image ";
 
     public static final String PRODUCT_NAME_NULL_OR_BLANK = "Product name can't be null or blank";
-    public static final String PRODUCT_NAME_DESCRIPTION = "Product name must contains only words separated by space"; //? requirement
+    public static final String PRODUCT_NAME_REQUIREMENTS = "Product name must contains only words separated by space";
 
     public static final String CODE_NULL_OR_BLANK = " code can't be null or blank";
-    public static final String CODE_REQUIREMENTS = " code must contains only digits"; //?
+    public static final String CODE_REQUIREMENTS = " code must contains only digits";
 
     public static final String GTIN_UPC_CODE_DOES_NOT_CONTAINS = "Api does not contain information about gtinUpc code=";
     public static final String FCD_ID_DOES_NOT_CONTAINS = "Api does not contain information about fcdId code=";
@@ -22,6 +22,15 @@ public class ExceptionMessages {
     public static final String PROBLEM_WITH_CLOSING_THE_SERVER = "Problem occurred while closing the server";
     public static final String PROBLEM_WITH_STARTING_THE_SERVER = "Problem occurred while starting the server";
 
+    public static final String PROBLEM_WITH_WRITING_IN_FILE = "IO exception occurred while writing to file=";
+    public static final String PROBLEM_WITH_READING_FROM_FILE = "IO exception occurred while reading from file=";
+
+    public static final String PROBLEM_WITH_API = "Unable to get information from Api";
+
+    public static final String UNABLE_TO_ACCEPT = "Unable to accept new client";
+    public static final String UNABLE_TO_READ_CLIENT_INPUT = "Unable to read the client input";
+    public static final String UNABLE_TO_WRITE_TO_CLIENT = "Unable to sent the result to client";
+    public static final String UNABLE_TO_SERVICE_CLIENT = "Exception occurred during service client socket";
 
     public static final String GET_FOOD_COMMAND_DESCRIPTION =
             "get-food <name> - name must contains only words";

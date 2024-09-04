@@ -1,6 +1,7 @@
 package bg.sofia.uni.fmi.mjt.foods;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import java.util.stream.Stream;
@@ -27,10 +28,17 @@ public record NutrientsReport(Nutrient fat, Nutrient fiber, Nutrient sugars,
     }
 
     public String serialize() {
-        List<String> args = Stream.of(fat, fiber, sugars, protein, calories)
-                .map(Nutrient::serialize)
-                .toList();
+        List<Nutrient> nutrients = Stream.of(fat, fiber, sugars, protein, calories).toList();
+        List<String> serializedNutrients = new ArrayList<>();
 
-        return String.join(SEPARATOR, args);
+        for (Nutrient nutrient : nutrients) {
+            if (nutrient == null) {
+                serializedNutrients.add(Nutrient.EMPTY_VALUE);
+            } else {
+                serializedNutrients.add(nutrient.serialize());
+            }
+        }
+
+        return String.join(SEPARATOR, serializedNutrients);
     }
 }

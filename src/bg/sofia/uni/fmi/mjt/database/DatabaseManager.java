@@ -63,10 +63,10 @@ public class DatabaseManager {
         foodReports.putAll(fileInfo);
     }
 
-    private void addAllFoodsWithGtinUpcCodeFromResultInDatabase(Foods result) { // to-do change name
+    private void addAllFoodsWithGtinUpcCodeFromResultInDatabase(Foods result) {
         for (Food food : result.foods()) {
             String gtinUpcCode = food.gtinUpc();
-            if (gtinUpcCode == null || gtinUpcCode.isBlank()) { // || gtinUpcCode.equals("null")) {
+            if (gtinUpcCode == null || gtinUpcCode.isBlank()) {
                 continue;
             }
 

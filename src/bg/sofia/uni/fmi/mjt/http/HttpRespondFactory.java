@@ -20,10 +20,6 @@ import java.util.regex.Pattern;
 public class HttpRespondFactory {
     private static final Gson gson = new Gson();
 
-    private HttpRespondFactory() {
-        // don't want instances of this class
-    }
-
     public static Foods getFoodsByNameFromApi(String name) throws NoSuchElementException {
         validateProductName(name);
 
@@ -78,7 +74,7 @@ public class HttpRespondFactory {
             return client.send(request, HttpResponse.BodyHandlers.ofString());
 
         } catch (IOException | InterruptedException e) {
-            throw new IllegalArgumentException("Unable to get information from Api", e); // ? IOException
+            throw new IllegalArgumentException(ExceptionMessages.PROBLEM_WITH_API, e);
         }
     }
 
@@ -94,7 +90,7 @@ public class HttpRespondFactory {
         Matcher matcher = pattern.matcher(productName);
 
         if (!matcher.find()) {
-            throw new IllegalArgumentException(ExceptionMessages.PRODUCT_NAME_DESCRIPTION);
+            throw new IllegalArgumentException(ExceptionMessages.PRODUCT_NAME_REQUIREMENTS);
         }
     }
 

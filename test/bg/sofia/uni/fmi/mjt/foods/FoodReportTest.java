@@ -17,7 +17,7 @@ public class FoodReportTest {
             "SAN MARZANO PEELED TOMATOES, BASIL LEAF.",
             NUTRIENT_REPORT);
     private static final String SERIALIZED_FOOD_REPORT =
-            "2543214@TOMATOES@SAN MARZANO PEELED TOMATOES, BASIL LEAF.@0,00#1,03#3,00#1,00#25,10";
+            "2543214@TOMATOES@SAN MARZANO PEELED TOMATOES, BASIL LEAF.@0.0#1.03#3.0#1.0#25.1";
 
     @Test
     void testSerializeIsCorrect() {

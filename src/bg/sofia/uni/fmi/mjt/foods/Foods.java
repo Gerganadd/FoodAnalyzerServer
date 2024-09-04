@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public record Foods(List<Food> foods) implements Serializable {
-    private static final String SEPARATOR = "#"; // for read and write data from file
+    private static final String SEPARATOR = "#";
     private static final int MAX_FOODS_COUNT = 5;
 
     public static Foods deserialize(String info) {

@@ -11,7 +11,6 @@ public class GetFoodReportCommand extends Command {
         super(attributes);
     }
 
-    //to-do write documentation
     @Override
     public String execute() throws NoSuchElementException {
         long fdcId = Long.parseLong(getAttributes().getFirst());

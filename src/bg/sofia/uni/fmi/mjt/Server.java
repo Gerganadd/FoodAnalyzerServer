@@ -39,13 +39,12 @@ public class Server implements Closeable {
         try (Server server = new Server()) {
             server.start();
         } catch (IOException e) {
-            System.out.println("Problem with server"); // add log
+            Logger.getInstance().addException(Status.UNABLE_TO_START_SERVER, e.getMessage(), e);
             System.out.println(e.getMessage());
         }
     }
 
     public void start() throws IOException {
-        System.out.println("Start server"); // to-do delete it
         Logger.getInstance().addLog(Status.OPEN_SERVER, "Server start successfully");
 
         try {
@@ -64,10 +63,9 @@ public class Server implements Closeable {
                 serviceAllReadySocketChannels();
             }
         } catch (IOException e) {
-            String message = "Server has problem with connection";
-            Logger.getInstance().addException(Status.UNABLE_TO_START_SERVER, message, e); ///////!!!!!!
+            Logger.getInstance().addException(Status.UNABLE_TO_START_SERVER, e.getMessage(), e);
 
-            throw new IOException("There is a problem with the server socket: " + e.getMessage(), e);
+            throw e;
         }
     }
 
@@ -104,28 +102,21 @@ public class Server implements Closeable {
             String respond = clientCommand.execute();
 
             sendRespondToClient(respond, clientChannel);
-
-            System.out.println("Service client"); // to-do delete it
         } catch (UnknownCommandException e) {
             Logger.getInstance().addException(Status.UNKNOWN_COMMAND,
                     e.getMessage(), e);
 
             sendRespondToClient(e.getMessage(), clientChannel);
-
-            System.out.println("Unknown command"); // to-do delete it
         } catch (NoSuchElementException e) {
             Logger.getInstance().addException(Status.NOT_FOUND_ELEMENT,
                     e.getMessage(), e);
 
             sendRespondToClient(e.getMessage(), clientChannel);
-
-            System.out.println("No such element"); // to-do delete it
         } catch (IOException e) {
             Logger.getInstance().addException(Status.UNABLE_TO_SERVICE_CHANNEL,
-                    "Problem with sending the response to client", e);
+                    ExceptionMessages.UNABLE_TO_WRITE_TO_CLIENT, e);
 
-            System.out.println("Problem with sending the response to the client"); // to-do delete it
-            throw new IOException("Exception occurred during service client socket", e);
+            throw new IOException(ExceptionMessages.UNABLE_TO_SERVICE_CLIENT, e);
         }
     }
 
@@ -135,13 +126,11 @@ public class Server implements Closeable {
 
             accept.configureBlocking(false);
             accept.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-
-            System.out.println("Accept new client"); // to-do delete it
         } catch (IOException e) {
             Logger.getInstance().addException(Status.UNSUCCESSFUL_CONNECTION,
-                    "Unable to accept new client", e);
+                    ExceptionMessages.UNABLE_TO_ACCEPT, e);
 
-            throw new IOException("Unable to accept new client", e);
+            throw new IOException(ExceptionMessages.UNABLE_TO_ACCEPT, e);
         }
     }
 
@@ -149,10 +138,9 @@ public class Server implements Closeable {
         try {
             buffer.clear();
 
-            int r = clientChannel.read(buffer);
-            if (r < 0) {
-                System.out.println("Closing chanel at: " + System.currentTimeMillis());
-                clientChannel.close(); //?
+            int readBytesCount = clientChannel.read(buffer);
+            if (readBytesCount < 0) {
+                clientChannel.close();
                 return null;
             }
 
@@ -163,11 +151,10 @@ public class Server implements Closeable {
 
             return new String(clientInputBytes, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            String message = "Couldn't read the client input";
-            System.out.println(message); //
-            Logger.getInstance().addException(Status.UNABLE_TO_READ, message, e);
+            Logger.getInstance().addException(
+                    Status.UNABLE_TO_READ, ExceptionMessages.UNABLE_TO_READ_CLIENT_INPUT, e);
 
-            throw new IOException(message, e);
+            throw new IOException(ExceptionMessages.UNABLE_TO_READ_CLIENT_INPUT, e);
         }
     }
 
@@ -181,10 +168,10 @@ public class Server implements Closeable {
 
             clientChannel.write(buffer);
         } catch (IOException e) {
-            String message = "Couldn't send result to the client";
-            Logger.getInstance().addException(Status.UNABLE_TO_WRITE, message, e);
+            Logger.getInstance().addException(
+                    Status.UNABLE_TO_WRITE, ExceptionMessages.UNABLE_TO_WRITE_TO_CLIENT, e);
 
-            throw new IOException(message, e);
+            throw new IOException(ExceptionMessages.UNABLE_TO_WRITE_TO_CLIENT, e);
         }
     }
 
@@ -205,11 +192,9 @@ public class Server implements Closeable {
     public void close() {
         isWorking = false;
 
-        if (selector.isOpen()) { // ?
+        if (selector.isOpen()) {
             selector.wakeup();
         }
-
-        Logger.getInstance().addLog(Status.CLOSE_SERVER, "Server stop successfully"); //?
 
         try {
             selector.close();
@@ -218,6 +203,8 @@ public class Server implements Closeable {
             Logger.getInstance().addException(Status.CLOSE_SERVER,
                     ExceptionMessages.PROBLEM_WITH_CLOSING_THE_SERVER, e);
         }
+
+        Logger.getInstance().addLog(Status.CLOSE_SERVER, "Server stop successfully");
 
         saveData();
     }

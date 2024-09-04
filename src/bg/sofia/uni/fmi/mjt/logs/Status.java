@@ -1,8 +1,6 @@
 package bg.sofia.uni.fmi.mjt.logs;
 
 public enum Status {
-    SUCCESSFUL_READ_FROM_FILE,
-    SUCCESSFUL_WRITE_IN_FILE,
     OPEN_SERVER,
     CLOSE_SERVER,
 

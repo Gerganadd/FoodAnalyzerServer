@@ -2,6 +2,7 @@ package bg.sofia.uni.fmi.mjt.commands;
 
 import bg.sofia.uni.fmi.mjt.exceptions.NoSuchElementException;
 
+import java.util.Collections;
 import java.util.List;
 
 public abstract class Command {
@@ -12,9 +13,8 @@ public abstract class Command {
     }
 
     public List<String> getAttributes() {
-        return attributes; // to-do make it immutable
+        return Collections.unmodifiableList(attributes);
     }
 
-    //to-do write documentation
     public abstract String execute() throws NoSuchElementException;
 }

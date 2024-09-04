@@ -20,15 +20,10 @@ public class HttpRequestFactory {
     private static final String MATCH_ALL_WORDS = "&requireAllWords=true";
     private static final String HTTP_VERSION_OF_SPACE = "%20";
 
-    private HttpRequestFactory() {
-        // don't want instances of this class
-    }
-
     public static HttpRequest createRequestForFoodByGtinUpcCode(String gtinUpcCode) {
         validateCode(gtinUpcCode, "Gtin upc");
 
         String query = createQueryForSearchByValue(gtinUpcCode);
-        System.out.println(query);
 
         return createHttpRequest(query);
     }
@@ -84,7 +79,7 @@ public class HttpRequestFactory {
         Matcher matcher = pattern.matcher(productName);
 
         if (!matcher.find()) {
-            throw new IllegalArgumentException(ExceptionMessages.PRODUCT_NAME_DESCRIPTION);
+            throw new IllegalArgumentException(ExceptionMessages.PRODUCT_NAME_REQUIREMENTS);
         }
     }
 

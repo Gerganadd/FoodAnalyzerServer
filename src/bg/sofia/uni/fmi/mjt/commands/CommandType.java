@@ -30,5 +30,4 @@ public enum CommandType {
     public String getText() {
         return text;
     }
-
 }
