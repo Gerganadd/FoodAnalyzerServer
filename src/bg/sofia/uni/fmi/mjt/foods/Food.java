@@ -1,12 +1,10 @@
 package bg.sofia.uni.fmi.mjt.foods;
 
-import bg.sofia.uni.fmi.mjt.regexs.Regex;
-
 import java.io.Serializable;
 import java.util.List;
 
 public record Food(long fdcId, String description, String gtinUpc) implements Serializable {
-    private static final String EMPTY_VALUE = "";
+    private static final String EMPTY_VALUE = "null";
     private static final String SEPARATOR = "@";
     private static final int FDC_ID_INDEX = 0;
     private static final int DESCRIPTION_INDEX = 1;
@@ -15,19 +13,37 @@ public record Food(long fdcId, String description, String gtinUpc) implements Se
     public static Food deserialize(String info) {
         String[] args = info.split(SEPARATOR);
 
-        long fdcId = Long.parseLong(args[FDC_ID_INDEX]);
-        String description = args[DESCRIPTION_INDEX].trim();
-        String gtinUpc = args[GTIN_UPC_INDEX].trim();
+        long fdcId = deserializeFcdId(args[FDC_ID_INDEX]);
+        String description = deserializeDescription(args[DESCRIPTION_INDEX]);
+        String gtinUpc = deserializeGtinUpcCode(args[GTIN_UPC_INDEX]);
 
         return new Food(fdcId, description, gtinUpc);
     }
 
-    public String serialize() {
-        String formattedGtinUpcCode = gtinUpc == null ? EMPTY_VALUE : gtinUpc; // ? "null"
-        String formattedDescription = description.replaceAll(Regex.MATCH_SPECIAL_SYMBOLS, EMPTY_VALUE);
+    private static long deserializeFcdId(String code) {
+        return Long.parseLong(code.trim());
+    }
 
-        List<String> args = List.of(Long.toString(fdcId), formattedDescription, formattedGtinUpcCode);
-        System.out.println(this);
+    private static String deserializeDescription(String description) {
+        return description.trim();
+    }
+
+    private static String deserializeGtinUpcCode(String code) {
+        code = code.trim();
+
+        if (code.equals(EMPTY_VALUE)) {
+            return null;
+        }
+
+        return code;
+    }
+
+    private static String serializeGtinUpcCode(String code) {
+        return code == null ? EMPTY_VALUE : code;
+    }
+
+    public String serialize() {
+        List<String> args = List.of(Long.toString(fdcId), description, serializeGtinUpcCode(gtinUpc));
 
         return String.join(SEPARATOR, args);
     }

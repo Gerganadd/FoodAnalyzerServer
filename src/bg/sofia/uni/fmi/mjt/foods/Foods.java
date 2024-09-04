@@ -6,7 +6,6 @@ import java.util.List;
 
 public record Foods(List<Food> foods) implements Serializable {
     private static final String SEPARATOR = "#"; // for read and write data from file
-    private static final String DELIMITER = ", "; // for send data in the network
     private static final int MAX_FOODS_COUNT = 5;
 
     public static Foods deserialize(String info) {
@@ -37,6 +36,6 @@ public record Foods(List<Food> foods) implements Serializable {
                 .map(Food::toString)
                 .toList();
 
-        return String.join(DELIMITER, args);
+        return String.join(SEPARATOR, args);
     }
 }
