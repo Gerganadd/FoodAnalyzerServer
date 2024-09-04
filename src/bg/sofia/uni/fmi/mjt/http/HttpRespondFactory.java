@@ -6,6 +6,7 @@ import bg.sofia.uni.fmi.mjt.foods.Food;
 import bg.sofia.uni.fmi.mjt.foods.FoodReport;
 import bg.sofia.uni.fmi.mjt.foods.Foods;
 
+import bg.sofia.uni.fmi.mjt.regexs.Regex;
 import com.google.gson.Gson;
 
 import java.io.IOException;
@@ -13,6 +14,8 @@ import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class HttpRespondFactory {
     private static final Gson gson = new Gson();
@@ -22,7 +25,7 @@ public class HttpRespondFactory {
     }
 
     public static Foods getFoodsByNameFromApi(String name) throws NoSuchElementException {
-        //to-do validate code
+        validateProductName(name);
 
         HttpRequest requestForFoodByKeyword = HttpRequestFactory.createRequestForFoodsByName(name);
         HttpResponse<String> responseFromApi = getFromApi(requestForFoodByKeyword);
@@ -38,7 +41,7 @@ public class HttpRespondFactory {
     }
 
     public static Food getFoodByBarcodeFromApi(String code) throws NoSuchElementException {
-        //to-do validate code
+        validateCode(code, "Gtin upc");
 
         HttpRequest requestForFoodByKeyword = HttpRequestFactory.createRequestForFoodByGtinUpcCode(code);
         HttpResponse<String> responseFromApi = getFromApi(requestForFoodByKeyword);
@@ -54,7 +57,7 @@ public class HttpRespondFactory {
     }
 
     public static FoodReport getFoodReportByFdcIdFromApi(String fdcId) throws NoSuchElementException {
-        //to-do validate fdcId
+        validateCode(fdcId, "Fdc id");
 
         HttpRequest requestByFcdId = HttpRequestFactory.createRequestForFoodByFcdId(fdcId);
         HttpResponse<String> responseFromApi = getFromApi(requestByFcdId);
@@ -75,8 +78,39 @@ public class HttpRespondFactory {
             return client.send(request, HttpResponse.BodyHandlers.ofString());
 
         } catch (IOException | InterruptedException e) {
-            throw new IllegalArgumentException("Make custom exception"); // to-do make custom exception
+            throw new IllegalArgumentException("Unable to get information from Api", e); // ? IOException
         }
     }
 
+    private static void validateProductName(String productName) {
+        if (productName == null || productName.isBlank()) {
+            throw new IllegalArgumentException(ExceptionMessages.PRODUCT_NAME_NULL_OR_BLANK);
+        }
+
+        productName = productName.trim();
+
+        Pattern pattern = Pattern.compile(
+                Regex.START_WITH + Regex.MATCH_ONLY_WORDS + Regex.END_WITH);
+        Matcher matcher = pattern.matcher(productName);
+
+        if (!matcher.find()) {
+            throw new IllegalArgumentException(ExceptionMessages.PRODUCT_NAME_DESCRIPTION);
+        }
+    }
+
+    private static void validateCode(String code, String codeName) {
+        if (code == null || code.isBlank()) {
+            throw new IllegalArgumentException(codeName + ExceptionMessages.CODE_NULL_OR_BLANK);
+        }
+
+        code = code.trim();
+
+        Pattern pattern = Pattern.compile(
+                Regex.START_WITH + Regex.MATCH_ONLY_DIGITS + Regex.END_WITH);
+        Matcher matcher = pattern.matcher(code);
+
+        if (!matcher.find()) {
+            throw new IllegalArgumentException(codeName + ExceptionMessages.CODE_REQUIREMENTS);
+        }
+    }
 }
