@@ -27,6 +27,22 @@ public class CommandFactoryTest {
     }
 
     @Test
+    void testCreateWithWrongCommandAttributes() {
+        assertThrows(UnknownCommandException.class,
+                () -> CommandFactory.create("get-food 12345"),
+                "Expected UnknownCommandException but wasn't thrown");
+
+        assertThrows(UnknownCommandException.class,
+                () -> CommandFactory.create("get-food-report tomatoes"),
+                "Expected UnknownCommandException but wasn't thrown");
+
+        assertThrows(UnknownCommandException.class,
+                () -> CommandFactory.create("get-food-by-barcode --code=23@43"),
+                "Expected UnknownCommandException but wasn't thrown");
+
+    }
+
+    @Test
     void testCreateWithInvalidCommandName() {
         assertThrows(UnknownCommandException.class,
                 () -> CommandFactory.create("get-foods pasta"), // the correct is: get-food

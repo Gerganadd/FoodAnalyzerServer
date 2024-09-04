@@ -1,14 +1,21 @@
 package bg.sofia.uni.fmi.mjt.http;
 
+import bg.sofia.uni.fmi.mjt.foods.Food;
 import org.junit.jupiter.api.Test;
 
-import java.net.URI;
 import java.net.http.HttpRequest;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class HttpRequestFactoryTest {
+    private static final Food TOMATOES = new Food(
+            2543214, "TOMATOES", "04656702273");
+    private static final Food RAFFAELLO_TREAT =
+            new Food(2041155, "RAFFAELLO TREAT", "009800146130");
+
     @Test
     void testCreateRequestForFoodByGtinUpcCodeWithNullCode() {
         assertThrows(IllegalArgumentException.class,
@@ -43,14 +50,16 @@ public class HttpRequestFactoryTest {
     }
 
     @Test
-    void testCreateRequestForFoodByGtinUpcCodeWithValidCode() { // to-do ?
-        String query = "";
-        HttpRequest expected = HttpRequest.newBuilder().uri(URI.create(query)).build();
-        HttpRequest actual = HttpRequestFactory.createRequestForFoodByGtinUpcCode("");
+    void testCreateRequestForFoodByGtinUpcCodeWithValidCode() {
+        String gtinUpc = TOMATOES.gtinUpc();
 
-        assertEquals(expected, actual,
-                "Expected: "+ expected.toString() + " but it was: " + actual.toString());
+        assertDoesNotThrow(() -> HttpRequestFactory.createRequestForFoodByGtinUpcCode(gtinUpc),
+                "Expected not to throw exception");
 
+        HttpRequest request = HttpRequestFactory.createRequestForFoodByGtinUpcCode(gtinUpc);
+
+        assertNotNull(request, "Don't expect request to be null");
+        assertFalse(request.uri().toString().isBlank(), "Don't expect request uri to be blank");
     }
 
     @Test
@@ -88,8 +97,15 @@ public class HttpRequestFactoryTest {
 
     @Test
     void testCreateRequestForFoodByFcdIdWithValidCode() {
-        //to-do
-        throw new RuntimeException("Not ready");
+        String fcdId = String.valueOf(TOMATOES.fdcId());
+
+        assertDoesNotThrow(() -> HttpRequestFactory.createRequestForFoodByFcdId(fcdId),
+                "Expected not to throw exception");
+
+        HttpRequest request = HttpRequestFactory.createRequestForFoodByFcdId(fcdId);
+
+        assertNotNull(request, "Don't expect request to be null");
+        assertFalse(request.uri().toString().isBlank(), "Don't expect request uri to be blank");
     }
 
     @Test
@@ -126,8 +142,28 @@ public class HttpRequestFactoryTest {
     }
 
     @Test
-    void testCreateRequestForFoodsByNameWithValidCode() {
-        // to-do
-        throw new RuntimeException("Not ready");
+    void testCreateRequestForFoodsByNameWithValidName() {
+        String name = TOMATOES.description();
+
+        assertDoesNotThrow(() -> HttpRequestFactory.createRequestForFoodsByName(name),
+                "Expected not to throw exception");
+
+        HttpRequest request = HttpRequestFactory.createRequestForFoodsByName(name);
+
+        assertNotNull(request, "Don't expect request to be null");
+        assertFalse(request.uri().toString().isBlank(), "Don't expect request uri to be blank");
+    }
+
+    @Test
+    void testCreateRequestForFoodsByNameWithValidNameMultipleNames() {
+        String name = RAFFAELLO_TREAT.description();
+
+        assertDoesNotThrow(() -> HttpRequestFactory.createRequestForFoodsByName(name),
+                "Expected not to throw exception");
+
+        HttpRequest request = HttpRequestFactory.createRequestForFoodsByName(name);
+
+        assertNotNull(request, "Don't expect request to be null");
+        assertFalse(request.uri().toString().isBlank(), "Don't expect request uri to be blank");
     }
 }
