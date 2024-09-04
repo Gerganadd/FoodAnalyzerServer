@@ -34,8 +34,6 @@ public class DatabaseManager {
     }
 
     private void loadFoodsByName() {
-        Map<String, String> databaseResult = FileManager.loadFrom(DEFAULT_FOODS_BY_NAME_FILE_NAME);
-
         Map<String, Foods> fileInfo = FileManager.loadFrom(DEFAULT_FOODS_BY_NAME_FILE_NAME)
                 .entrySet()
                 .stream()

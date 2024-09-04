@@ -88,7 +88,7 @@ public class HttpRequestFactory {
         }
     }
 
-    private static void validateCode(String code, String codeName) { //?
+    private static void validateCode(String code, String codeName) {
         if (code == null || code.isBlank()) {
             throw new IllegalArgumentException(codeName + ExceptionMessages.CODE_NULL_OR_BLANK);
         }
