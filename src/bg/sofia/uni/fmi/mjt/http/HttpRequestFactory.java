@@ -10,8 +10,7 @@ import java.util.regex.Pattern;
 
 public class HttpRequestFactory {
     private static final String SITE_URL = "https://api.nal.usda.gov/fdc/";
-    private static final String API_KEY_VALUE = "2vPhFALHihIOLVYt0VjFvRJJjpFRsnFGR38NoM8K";
-    private static final String API_KEY = String.format("api_key=%s", API_KEY_VALUE);
+    private static final String API_KEY = String.format("api_key=%s", System.getenv("FOODS_API_KEY"));
 
     private static final String SEARCH_BY_VALUE = "%s%s?query=%s%s&%s";
     private static final String SEARCH_BY_ID = "%sv1/food/%s?%s";
